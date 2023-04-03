@@ -1,38 +1,41 @@
 pipeline {
-    agent any
-    options {
-        skipStagesAfterUnstable()
+  agent any
+  
+  triggers {
+    githubPush()
+  }
+  
+  environment {
+    DOCKER_REGISTRY = "943696080604.dkr.ecr.us-west-1.amazonaws.com"
+    ECR_REPOSITORY = "dockerjenkins"
+    IMAGE_TAG = "${env.BUILD_NUMBER}"
+  }
+  
+  stages {
+    stage('Checkout') {
+      steps {
+        git branch: 'jenkins-ecr', url: 'https://github.com/kacperuchwatit/dockerjenkins'
+      }
     }
-    stages {
-         stage('Clone repository') { 
-            steps { 
-                script{
-                checkout scm
-                }
-            }
+    
+    stage('Build and Push') {
+      steps {
+        script {
+          docker.withRegistry("https://${DOCKER_REGISTRY}", 'ecr:us-west-1:aws-ecr') {
+            def image = docker.build("${DOCKER_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}", '.')
+            image.push()
+          }
         }
-
-        stage('Build') { 
-            steps { 
-                script{
-                 app = docker.build("underwater")
-                }
-            }
-        }
-        stage('Test'){
-            steps {
-                 echo 'Empty'
-            }
-        }
-        stage('Deploy') {
-            steps {
-                script{
-                        docker.withRegistry('https://943696080604.dkr.ecr.us-east-2.amazonaws.com', 'ecr:us-west-1:aws-credentials') {
-                    app.push("${env.BUILD_NUMBER}")
-                    app.push("latest")
-                    }
-                }
-            }
-        }
+      }
     }
+    
+    stage('Deploy') {
+      when {
+        branch 'jenkins-ecr'
+      }
+      steps {
+        sh './deploy.sh'
+      }
+    }
+  }
 }
