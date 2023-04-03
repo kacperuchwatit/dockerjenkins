@@ -1,40 +1,33 @@
 pipeline {
-  agent any
-  
-  triggers {
-    githubPush()
+  agent {
+    docker {
+      image 'maven:3.8.1-openjdk-11'
+      args '-v /root/.m2:/root/.m2'
+    }
   }
-  
-  environment {
-    DOCKER_REGISTRY = "943696080604.dkr.ecr.us-west-1.amazonaws.com"
-    ECR_REPOSITORY = "dockerjenkins"
-    IMAGE_TAG = "${env.BUILD_NUMBER}"
-  }
-  
   stages {
-    stage('Checkout') {
+    stage('Build') {
       steps {
-        git branch: 'jenkins-ecr', url: 'https://github.com/kacperuchwatit/dockerjenkins'
+        sh 'mvn -B -DskipTests clean package'
       }
     }
-    
-    stage('Build and Push') {
+    stage('Test') {
+      steps {
+        sh 'mvn test'
+      }
+    }
+    stage('Build Docker Image') {
       steps {
         script {
-          docker.withRegistry("https://${DOCKER_REGISTRY}", 'aws-credentials') {
-            def image = docker.build("${DOCKER_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}", '.')
-            image.push()
+          docker.withRegistry('https://943696080604.dkr.ecr.us-west-1.amazonaws.com', 'ecr:us-east-1:aws-credentials') {
+            def customImage = docker.build("943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins:${env.BUILD_ID}")
+            customImage.push()
           }
         }
       }
     }
-    
     stage('Deploy') {
-      when {
-        branch 'jenkins-ecr'
-      }
       steps {
-        sh './deploy.sh'
       }
     }
   }
