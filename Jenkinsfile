@@ -21,7 +21,7 @@ pipeline {
     stage('Build and Push') {
       steps {
         script {
-          docker.withRegistry("https://${DOCKER_REGISTRY}", 'ecr:us-west-1:aws-ecr') {
+          docker.withRegistry("https://${DOCKER_REGISTRY}", 'aws-credentials') {
             def image = docker.build("${DOCKER_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}", '.')
             image.push()
           }
