@@ -4,7 +4,7 @@ pipeline {
     environment {
         ECR_REGISTRY = "943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins"
         AWS_REGION = "us-west-1"
-        DOCKER_IMAGE = "docker_jenkins"
+        DOCKER_IMAGE = "Dockerfile"
     }
 
     stages {
