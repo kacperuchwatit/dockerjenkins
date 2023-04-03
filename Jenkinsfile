@@ -19,8 +19,8 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script {
-                    withCredentials([awsEcr(credentialsId: 'aws-credentials', region: us-west-1, registryId: '')]) {
-                        docker.withRegistry("https://943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins", 'ecr') {
+                    withCredentials([awsEcr(credentialsId: 'aws-credentials', region: AWS_REGION, registryId: '')]) {
+                        docker.withRegistry("https://${ECR_REGISTRY}", 'ecr') {
                             dockerImage.push()
                         }
                     }
