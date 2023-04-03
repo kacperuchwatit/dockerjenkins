@@ -1,35 +1,28 @@
 pipeline {
     agent any
-    options {
-        skipStagesAfterUnstable()
-    }
-    stages {
-         stage('Clone repository') { 
-            steps { 
-                script{
-                checkout scm
-                }
-            }
-        }
 
-        stage('Build') { 
-            steps { 
-                script{
-                 app = docker.build("underwater")
+    environment {
+        ECR_REGISTRY = "943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins"
+        AWS_REGION = "us-west-1"
+        DOCKER_IMAGE = "docker_jenkins"
+    }
+
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    docker.build(DOCKER_IMAGE)
                 }
             }
         }
-        stage('Test'){
+        
+        stage('Push to ECR') {
             steps {
-                 echo 'Empty'
-            }
-        }
-        stage('Deploy') {
-            steps {
-                script{
-                        docker.withRegistry('https://943696080604.dkr.ecr.us-west-1.amazonaws.com', 'ecr:us-west-1:aws-credentials') {
-                    app.push("${env.BUILD_NUMBER}")
-                    app.push("latest")
+                script {
+                    withCredentials([awsEcr(credentialsId: 'aws-credentials', region: AWS_REGION, registryId: '')]) {
+                        docker.withRegistry("https://${ECR_REGISTRY}", 'ecr') {
+                            dockerImage.push()
+                        }
                     }
                 }
             }
