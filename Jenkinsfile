@@ -15,7 +15,7 @@ pipeline {
     stage('Building image') {
       steps{
         script {
-          dockerImage = docker.build registry
+            sh 'ssh -i /var/jenkins_home/workspace/Docker\ AWS/Jenkins-KeyPair.pem ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "dockerImage = docker.build registry"' 
         }
       }
     }
@@ -25,7 +25,7 @@ pipeline {
      steps{  
          script {
                 sh 'https://943696080604.dkr.ecr.us-west-1.amazonaws.com', 'ecr:us-west-1:aws-credentials'
-                sh 'docker push 943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins:latest'
+                sh 'ssh -i /var/jenkins_home/workspace/Docker\ AWS/Jenkins-KeyPair.pem ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "docker push 943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins:latest"'
          }
         }
       }
@@ -33,15 +33,15 @@ pipeline {
          
      stage('stop previous containers') {
          steps {
-            sh 'docker ps -f name=mypythonContainer -q | xargs --no-run-if-empty docker container stop'
-            sh 'docker container ls -a -fname=mypythonContainer -q | xargs -r docker container rm'
+            sh 'ssh -i /var/jenkins_home/workspace/Docker\ AWS/Jenkins-KeyPair.pem ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "docker ps -f name=mypythonContainer -q | xargs --no-run-if-empty docker container stop"'
+            sh 'ssh -i /var/jenkins_home/workspace/Docker\ AWS/Jenkins-KeyPair.pem ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "docker container ls -a -fname=mypythonContainer -q | xargs -r docker container rm"'
          }
        }
       
     stage('Docker Run') {
      steps{
          script {
-                sh 'docker run -d -p 8096:5000 --rm --name mypythonContainer 943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins:latest'
+                sh 'ssh -i /var/jenkins_home/workspace/Docker\ AWS/Jenkins-KeyPair.pem ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "docker run -d -p 8096:5000 --rm --name mypythonContainer 943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins:latest"'
             }
       }
     }
