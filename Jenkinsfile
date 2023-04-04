@@ -15,7 +15,7 @@ pipeline {
         stage('Build') { 
             steps { 
                 script{
-                 sh 'ssh -T /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com'
+                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com'
                     app = docker.build("underwater")
                 }
             }
