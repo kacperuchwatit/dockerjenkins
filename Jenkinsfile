@@ -1,49 +1,38 @@
 pipeline {
     agent any
-    environment {
-        registry = "943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins"
+    options {
+        skipStagesAfterUnstable()
     }
-   
     stages {
-        stage('Cloning Git') {
+         stage('Clone repository') { 
+            steps { 
+                script{
+                checkout scm
+                }
+            }
+        }
+
+        stage('Build') { 
+            steps { 
+                script{
+                 sh 'ssh -i /var/jenkins_home/workspace/Docker\ AWS/Jenkins-KeyPair.pem ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "app = docker.build("underwater")"'
+                }
+            }
+        }
+        stage('Test'){
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/jenkins-ecr']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/kacperuchwatit/dockerjenkins']]])     
+                 echo 'Empty'
             }
         }
-  
-    
-    stage('Building image') {
-      steps{
-        script {
-            sh 'ssh -i /var/jenkins_home/workspace/Docker\ AWS/Jenkins-KeyPair.pem ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "dockerImage = docker.build registry"' 
-        }
-      }
-    }
-   
-    
-    stage('Pushing to ECR') {
-     steps{  
-         script {
-                sh 'https://943696080604.dkr.ecr.us-west-1.amazonaws.com', 'ecr:us-west-1:aws-credentials'
-                sh 'ssh -i /var/jenkins_home/workspace/Docker\ AWS/Jenkins-KeyPair.pem ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "docker push 943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins:latest"'
-         }
-        }
-      }
-   
-         
-     stage('stop previous containers') {
-         steps {
-            sh 'ssh -i /var/jenkins_home/workspace/Docker\ AWS/Jenkins-KeyPair.pem ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "docker ps -f name=mypythonContainer -q | xargs --no-run-if-empty docker container stop"'
-            sh 'ssh -i /var/jenkins_home/workspace/Docker\ AWS/Jenkins-KeyPair.pem ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "docker container ls -a -fname=mypythonContainer -q | xargs -r docker container rm"'
-         }
-       }
-      
-    stage('Docker Run') {
-     steps{
-         script {
-                sh 'ssh -i /var/jenkins_home/workspace/Docker\ AWS/Jenkins-KeyPair.pem ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "docker run -d -p 8096:5000 --rm --name mypythonContainer 943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins:latest"'
+        stage('Deploy') {
+            steps {
+                script{
+                        docker.withRegistry('https://720766170633.dkr.ecr.us-east-2.amazonaws.com', 'ecr:us-east-2:aws-credentials') {
+                    app.push("${env.BUILD_NUMBER}")
+                    app.push("latest")
+                    }
+                }
             }
-      }
-    }
+        }
     }
 }
