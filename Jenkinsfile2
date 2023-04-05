@@ -1,1 +1,46 @@
+pipeline {
+    agent any
+    options {
+        skipStagesAfterUnstable()
+    }
+    triggers {
+        cron('*/5 * * * *')
+    }
+    stages {
+         stage('Clone repository') { 
+            steps { 
+                script{
+                checkout scm
+                }
+            }
+        }
 
+        stage('Build') { 
+            steps { 
+                script{
+                    sh 'scp -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem Dockerfile ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com:/home/ec2-user'
+                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "aws ecr get-login-password --region us-west-1 | sudo docker login --username AWS --password-stdin 943696080604.dkr.ecr.us-west-1.amazonaws.com"'
+                }
+            }
+        }
+        stage('Tag') { 
+            steps { 
+                script{
+                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "docker pull 943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins:33"'
+                }
+            }
+        }
+        stage('Test'){
+            steps {
+                 echo 'Empty'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                script{
+                     sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "sudo docker build -t dockerjenkins ."'
+                    }
+                }
+            }
+        }
+    }
