@@ -15,7 +15,15 @@ pipeline {
         stage('Build') { 
             steps { 
                 script{
-                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "sudo docker run -d hello-world"'
+                    sh 'scp -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem Dockerfile ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com:/home/ec2-user'
+                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "sudo docker build -t dockerjenkins ."'
+                }
+            }
+        }
+        stage('Tag') { 
+            steps { 
+                script{
+                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "sudo docker tag dockerjenkins:latest 943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins:latest"'
                 }
             }
         }
@@ -27,12 +35,10 @@ pipeline {
         stage('Deploy') {
             steps {
                 script{
-                        docker.withRegistry('https://943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins', 'aws-credentials') {
-                    app.push("${env.BUILD_NUMBER}")
-                    app.push("latest")
+                     sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 943696080604.dkr.ecr.us-west-1.amazonaws.com"'
+                     sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "docker push 943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins:latest"'
                     }
                 }
             }
         }
     }
-}
