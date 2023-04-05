@@ -26,7 +26,7 @@ pipeline {
         stage('Tag') { 
             steps { 
                 script{
-                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "docker pull 943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins:33"'
+                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-13-57-229-166.us-west-1.compute.amazonaws.com "sudo docker pull 943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins:33"'
                 }
             }
         }
