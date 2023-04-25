@@ -13,7 +13,7 @@ pipeline {
         }
         stage('Pull from ECR') {
             steps {
-                sh "sudo docker pull 943696080604.dkr.ecr.us-west-1.amazonaws.com/k8s:latest"
+                sh "docker pull 943696080604.dkr.ecr.us-west-1.amazonaws.com/k8s:latest"
             }
         }
         stage('Deploy to EKS') {
