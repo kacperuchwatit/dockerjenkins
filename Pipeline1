@@ -29,7 +29,7 @@ pipeline {
         stage('Deploy to EKS') {
             steps {
                 script{
-                     sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com "sudo kubectl set image deployment/hello-deploy my-container=943696080604.dkr.ecr.us-west-1.amazonaws.com/k8s:latest -n aws-app"'
+                     sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com "kubectl set image deployment/hello-deploy my-container=943696080604.dkr.ecr.us-west-1.amazonaws.com/k8s:latest -n aws-app"'
                     }
                 }
             }
