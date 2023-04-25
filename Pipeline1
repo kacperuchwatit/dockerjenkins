@@ -4,22 +4,34 @@ pipeline {
         skipStagesAfterUnstable()
     }
     stages {
-        stage('https://github.com/kacperuchwatit/dockerjenkins.git') { 
+         stage('Clone repository') { 
             steps { 
                 script{
                 checkout scm
                 }
             }
         }
-        stage('Pull from ECR') {
-            steps {
-                sh "docker pull 943696080604.dkr.ecr.us-west-1.amazonaws.com/k8s:latest"
+
+        stage('Connect EC2') { 
+            steps { 
+                script{
+                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com "aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 943696080604.dkr.ecr.us-west-1.amazonaws.com"'
+                }
+            }
+        }
+        stage('Pull from ECR') { 
+            steps { 
+                script{
+                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com "sudo docker pull 943696080604.dkr.ecr.us-west-1.amazonaws.com/k8s:latest"'
+                }
             }
         }
         stage('Deploy to EKS') {
             steps {
-                sh "kubectl set image deployment/aws-pod your-container-name=943696080604.dkr.ecr.us-west-1.amazonaws.com/k8s:latest -n aws-app"
+                script{
+                     sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com "kubectl set image deployment/hello-deploy my-container=943696080604.dkr.ecr.us-west-1.amazonaws.com/k8s:latest -n aws-app"'
+                    }
+                }
             }
         }
     }
-}
