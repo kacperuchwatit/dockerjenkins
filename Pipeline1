@@ -11,7 +11,14 @@ pipeline {
                 }
             }
         }
-
+        stage('Build') { 
+            steps { 
+                script{
+                    sh 'scp -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem Dockerfile ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com:/home/ec2-user'
+                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com "sudo docker build -t k8s ."'
+                }
+            }
+        }
         stage('Connect EC2') { 
             steps { 
                 script{
