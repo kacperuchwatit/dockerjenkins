@@ -15,7 +15,7 @@ pipeline {
             steps { 
                 script{
                     sh 'scp -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem Dockerfile ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com:/home/ec2-user'
-                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com "sudo docker build -t k8s ."'
+                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com "sudo docker build -t k8s:latest ."'
                 }
             }
         }
@@ -26,10 +26,10 @@ pipeline {
                 }
             }
         }
-        stage('Pull from ECR') { 
+        stage('Push from ECR') { 
             steps { 
                 script{
-                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com "sudo docker pull 943696080604.dkr.ecr.us-west-1.amazonaws.com/k8s:latest"'
+                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com "sudo docker push 943696080604.dkr.ecr.us-west-1.amazonaws.com/k8s:latest"'
                 }
             }
         }
