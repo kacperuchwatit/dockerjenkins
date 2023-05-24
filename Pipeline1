@@ -4,41 +4,40 @@ pipeline {
         skipStagesAfterUnstable()
     }
     stages {
-         stage('Clone repository') { 
+         stage('clone github repository') { 
             steps { 
                 script{
                 checkout scm
                 }
             }
         }
-        stage('Build') { 
+        stage('build docker image') { 
             steps { 
                 script{
-                    sh 'scp -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem Dockerfile ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com:/home/ec2-user'
-                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com "sudo docker build -t k8s:latest ."'
+                    sh 'scp -i /var/jenkins_home/trigger/jumphost.pem Dockerfile ubuntu@ec2-54-153-5-227.us-west-1.compute.amazonaws.com:/home/ubuntu'
+                 sh 'ssh -i /var/jenkins_home/trigger/jumphost.pem -T ubuntu@ec2-54-153-5-227.us-west-1.compute.amazonaws.com "sudo docker build -t cloudtask:wordpress ."'
                 }
             }
         }
         stage('Connect EC2') { 
             steps { 
                 script{
-                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com "sudo aws ecr get-login-password --region us-west-1 | sudo docker login --username AWS --password-stdin 943696080604.dkr.ecr.us-west-1.amazonaws.com"'
+                 sh 'ssh -i /var/jenkins_home/trigger/jumphost.pem -T ubuntu@ec2-54-153-5-227.us-west-1.compute.amazonaws.com "sudo aws ecr get-login-password --region us-west-1 | sudo docker login --username AWS --password-stdin 943696080604.dkr.ecr.us-west-1.amazonaws.com"'
                 }
             }
         }
-        stage('Push from ECR') { 
+        stage('push docker image to ECR') { 
             steps { 
                 script{
-                 sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com "sudo docker push 943696080604.dkr.ecr.us-west-1.amazonaws.com/k8s:latest"'
+                 sh 'ssh -i /var/jenkins_home/trigger/jumphost.pem -T ubuntu@ec2-54-153-5-227.us-west-1.compute.amazonaws.com "sudo docker push 943696080604.dkr.ecr.us-west-1.amazonaws.com/bootcamp:wordpress"'
                 }
             }
         }
-        stage('Deploy to EKS') {
+        stage('deploy on eks cluster') {
             steps {
                 script{
-                     sh 'ssh -i /var/jenkins_home/workspace/trigger/Jenkins-KeyPair.pem -T ec2-user@ec2-52-53-153-99.us-west-1.compute.amazonaws.com "kubectl apply -f k8s.yaml"'
+                     sh 'ssh -i /var/jenkins_home/trigger/jumphost.pem -T ubuntu@ec2-54-153-5-227.us-west-1.compute.amazonaws.com "kubectl apply -f k8s.yaml"'
                     }
                 }
             }
         }
-    }
