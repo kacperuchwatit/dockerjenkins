@@ -4,35 +4,40 @@ pipeline {
         skipStagesAfterUnstable()
     }
     stages {
-         stage('https://github.com/kacperuchwatit/dockerjenkins.git') { 
+         stage('clone github repository') { 
             steps { 
                 script{
                 checkout scm
                 }
             }
         }
-
-        stage('Build') { 
+        stage('build docker image') { 
             steps { 
                 script{
-                 app = docker.build("underwater")
+                 sh 'sudo docker build -t cloudtask:wordpress .'
                 }
             }
         }
-        stage('Test'){
-            steps {
-                 echo 'Empty'
+        stage('Connect EC2') { 
+            steps { 
+                script{
+                 sh 'aws ecr get-login-password --region us-west-1 | sudo docker login --username AWS --password-stdin 943696080604.dkr.ecr.us-west-1.amazonaws.com'
+                }
             }
         }
-        stage('Deploy') {
+        stage('push docker image to ECR') { 
+            steps { 
+                script{
+                 sh 'sudo docker push 943696080604.dkr.ecr.us-west-1.amazonaws.com/bootcamp:wordpress'
+                }
+            }
+        }
+        stage('deploy on eks cluster') {
             steps {
                 script{
-                        docker.withRegistry('943696080604.dkr.ecr.us-west-1.amazonaws.com/dockerjenkins', 'ecr:us-west-1:aws-credentials') {
-                    app.push("${env.BUILD_NUMBER}")
-                    app.push("latest")
+                     sh 'kubectl apply -f firstdeploy.yaml'
                     }
                 }
             }
         }
     }
-}
