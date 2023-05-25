@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+    options {
+        skipStagesAfterUnstable()
+    }
+    stages {
+         stage('clone github repository') { 
+            steps { 
+                script{
+                checkout scm
+                }
+            }
+        }
+        stage('build docker image') { 
+            steps { 
+                script{
+                    sh 'scp -i /var/jenkins_home/trigger/jumphost.pem Dockerfile ubuntu@ec2-54-153-5-227.us-west-1.compute.amazonaws.com:/home/ubuntu'
+                 sh 'ssh -i /var/jenkins_home/trigger/jumphost.pem -T ubuntu@ec2-54-153-5-227.us-west-1.compute.amazonaws.com "sudo docker build -t cloudtask:helloworld ."'
+                }
+            }
+        }
+        stage('Connect EC2') { 
+            steps { 
+                script{
+                 sh 'ssh -i /var/jenkins_home/trigger/jumphost.pem -T ubuntu@ec2-54-153-5-227.us-west-1.compute.amazonaws.com "aws ecr get-login-password --region us-west-1 | sudo docker login --username AWS --password-stdin 943696080604.dkr.ecr.us-west-1.amazonaws.com"'
+                }
+            }
+        }
+        stage('push docker image to ECR') { 
+            steps { 
+                script{
+                 sh 'ssh -i /var/jenkins_home/trigger/jumphost.pem -T ubuntu@ec2-54-153-5-227.us-west-1.compute.amazonaws.com "sudo docker push 943696080604.dkr.ecr.us-west-1.amazonaws.com/bootcamp:helloworld"'
+                }
+            }
+        }
+        stage('deploy on eks cluster') {
+            steps {
+                script{
+                     sh 'ssh -i /var/jenkins_home/trigger/jumphost.pem -T ubuntu@ec2-54-153-5-227.us-west-1.compute.amazonaws.com "kubectl apply -f seconddeploy.yml"'
+                    }
+                }
+            }
+        }
+    }
