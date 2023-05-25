@@ -22,7 +22,7 @@ pipeline {
         stage('Connect EC2') { 
             steps { 
                 script{
-                 sh 'ssh -i /var/jenkins_home/trigger/jumphost.pem -T ubuntu@ec2-54-153-5-227.us-west-1.compute.amazonaws.com "sudo aws ecr get-login-password --region us-west-1 | sudo docker login --username AWS --password-stdin 943696080604.dkr.ecr.us-west-1.amazonaws.com"'
+                 sh 'ssh -i /var/jenkins_home/trigger/jumphost.pem -T ubuntu@ec2-54-153-5-227.us-west-1.compute.amazonaws.com "aws ecr get-login-password --region us-west-1 | sudo docker login --username AWS --password-stdin 943696080604.dkr.ecr.us-west-1.amazonaws.com"'
                 }
             }
         }
