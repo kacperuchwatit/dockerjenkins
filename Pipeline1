@@ -36,7 +36,7 @@ pipeline {
         stage('deploy on eks cluster') {
             steps {
                 script{
-                     sh 'ssh -i /var/jenkins_home/trigger/jumphost.pem -T ubuntu@ec2-54-153-5-227.us-west-1.compute.amazonaws.com "kubectl apply -f k8s.yaml"'
+                     sh 'ssh -i /var/jenkins_home/trigger/jumphost.pem -T ubuntu@ec2-54-153-5-227.us-west-1.compute.amazonaws.com "kubectl apply -f firstdeploy.yaml"'
                     }
                 }
             }
